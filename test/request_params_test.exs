@@ -22,7 +22,7 @@ defmodule ExFiskal.RequestParamsTest do
       assert params.invoice_number == "1"
       assert params.business_unit == "STORE1"
       assert params.device_number == "1"
-      assert params.total_amount == 10000
+      assert params.total_amount == "100.00"
       assert params.operator_tax_number == "98765432109"
       assert params.security_code == "01234567890123456789012345678901"
     end
@@ -46,7 +46,7 @@ defmodule ExFiskal.RequestParamsTest do
       assert is_nil(params.special_purpose)
     end
 
-    test "converts string amounts to integers (cents)" do
+    test "converts string amounts to formatted strings" do
       params =
         Map.merge(@valid_params, %{
           total_amount: "100.50",
@@ -56,10 +56,10 @@ defmodule ExFiskal.RequestParamsTest do
         })
 
       {:ok, validated} = RequestParams.new(params)
-      assert validated.total_amount == 10050
-      assert validated.vat_free_amount == 5010
-      assert validated.margin_amount == 2500
-      assert validated.non_taxable_amount == 1000
+      assert validated.total_amount == "100.50"
+      assert validated.vat_free_amount == "50.10"
+      assert validated.margin_amount == "25.00"
+      assert validated.non_taxable_amount == "10.00"
     end
 
     test "handles datetime values" do
@@ -80,8 +80,12 @@ defmodule ExFiskal.RequestParamsTest do
       {:ok, validated} = RequestParams.new(params)
       assert length(validated.vat) == 2
       [vat1, vat2] = validated.vat
-      assert vat1.rate == 2500
-      assert vat2.rate == 1300
+      assert vat1.rate == "25.00"
+      assert vat1.base == "80.00"
+      assert vat1.amount == "20.00"
+      assert vat2.rate == "13.00"
+      assert vat2.base == "100.00"
+      assert vat2.amount == "13.00"
     end
 
     test "accepts and validates consumption tax entries" do
@@ -93,7 +97,9 @@ defmodule ExFiskal.RequestParamsTest do
       {:ok, validated} = RequestParams.new(params)
       assert length(validated.consumption_tax) == 1
       [tax] = validated.consumption_tax
-      assert tax.rate == 1000
+      assert tax.rate == "10.00"
+      assert tax.base == "100.00"
+      assert tax.amount == "10.00"
     end
 
     test "accepts and validates other tax entries" do
@@ -106,7 +112,9 @@ defmodule ExFiskal.RequestParamsTest do
       assert length(validated.other_taxes) == 1
       [tax] = validated.other_taxes
       assert tax.name == "City tax"
-      assert tax.rate == 500
+      assert tax.rate == "5.00"
+      assert tax.base == "100.00"
+      assert tax.amount == "5.00"
     end
 
     test "accepts and validates fee entries" do
@@ -119,7 +127,7 @@ defmodule ExFiskal.RequestParamsTest do
       assert length(validated.fees) == 1
       [fee] = validated.fees
       assert fee.name == "Service fee"
-      assert fee.amount == 1000
+      assert fee.amount == "10.00"
     end
   end
 
@@ -251,29 +259,29 @@ defmodule ExFiskal.RequestParamsTest do
       assert result.device_number == "12"
 
       [vat1, vat2, vat3] = result.vat
-      assert vat1 == %{rate: 2500, base: 1000, amount: 250}
-      assert vat2 == %{rate: 1000, base: 1000, amount: 100}
-      assert vat3 == %{rate: 0, base: 1000, amount: 0}
+      assert vat1 == %{rate: "25.00", base: "10.00", amount: "2.50"}
+      assert vat2 == %{rate: "10.00", base: "10.00", amount: "1.00"}
+      assert vat3 == %{rate: "0.00", base: "10.00", amount: "0.00"}
 
       [consumption] = result.consumption_tax
-      assert consumption == %{rate: 300, base: 1000, amount: 30}
+      assert consumption == %{rate: "3.00", base: "10.00", amount: "0.30"}
 
       [other_tax] = result.other_taxes
 
       assert other_tax == %{
                name: "Porez na luksuz",
-               rate: 1500,
-               base: 1000,
-               amount: 150
+               rate: "15.00",
+               base: "10.00",
+               amount: "1.50"
              }
 
-      assert result.vat_free_amount == 1200
-      assert result.margin_amount == 1300
+      assert result.vat_free_amount == "12.00"
+      assert result.margin_amount == "13.00"
 
       [fee] = result.fees
-      assert fee == %{name: "Povratna naknada", amount: 100}
+      assert fee == %{name: "Povratna naknada", amount: "1.00"}
 
-      assert result.total_amount == 3000
+      assert result.total_amount == "30.00"
       assert result.payment_method == "K"
       assert result.operator_tax_number == "01234567890"
       assert result.security_code == "e4d909c290d0fb1ca068ffaddf22cbd0"

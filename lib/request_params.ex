@@ -1,9 +1,4 @@
 defmodule ExFiskal.RequestParams do
-  @moduledoc """
-  Validates and prepares parameters for fiscalization requests.
-  Uses integers (cents) for all monetary values.
-  """
-
   alias ExFiskal.Enums.{PaymentMethod, SequenceMark}
 
   @base_tax_schema [:rate, :base, :amount]
@@ -42,6 +37,7 @@ defmodule ExFiskal.RequestParams do
     |> ensure_boolean_values()
     |> set_defaults()
     |> validate()
+    |> format_output()
   end
 
   def validate(params) do
@@ -53,7 +49,6 @@ defmodule ExFiskal.RequestParams do
     end
   end
 
-  # Datetime validation functions remain unchanged
   def validate_datetime(value) when is_binary(value) do
     case DateTime.from_iso8601(value) do
       {:ok, datetime, _offset} ->
@@ -128,11 +123,8 @@ defmodule ExFiskal.RequestParams do
     missing_keys = Enum.filter(schema, fn key -> !Map.has_key?(item, key) end)
 
     case missing_keys do
-      [] ->
-        validate_tax_item_formats(item)
-
-      _ ->
-        {:error, "Missing required fields: #{Enum.join(missing_keys, ", ")}"}
+      [] -> validate_tax_item_formats(item)
+      _ -> {:error, "Missing required fields: #{Enum.join(missing_keys, ", ")}"}
     end
   end
 
@@ -166,7 +158,6 @@ defmodule ExFiskal.RequestParams do
 
   defp validate_fee_item(_), do: {:error, "Fee item must have name and amount"}
 
-  # Validation functions for non-numeric fields remain unchanged
   defp validate_tax_number(value) when is_binary(value) do
     if Regex.match?(@tax_number_regex, value), do: :ok, else: {:error, "has invalid format"}
   end
@@ -183,15 +174,12 @@ defmodule ExFiskal.RequestParams do
     if Regex.match?(@invoice_number_regex, value), do: :ok, else: {:error, "has invalid format"}
   end
 
-  # Updated validation for integer amounts (in cents)
   defp validate_amount(value) when is_integer(value) do
     if value >= 0, do: :ok, else: {:error, "must be non-negative"}
   end
 
   defp validate_amount(_), do: {:error, "must be an integer representing cents"}
 
-  # Updated validation for rates (stored as integer percentage * 100)
-  # e.g., 25.5% is stored as 2550
   defp validate_rate(value) when is_integer(value) do
     if value >= 0 and value <= 10000, do: :ok, else: {:error, "must be between 0 and 100%"}
   end
@@ -218,7 +206,6 @@ defmodule ExFiskal.RequestParams do
     if value in SequenceMark.values(), do: :ok, else: {:error, "has invalid value"}
   end
 
-  # Datetime formatting functions remain unchanged
   defp format_datetime_fields(params) do
     params
     |> format_field(:datetime)
@@ -254,7 +241,6 @@ defmodule ExFiskal.RequestParams do
     Map.put(errors, field, message)
   end
 
-  # Updated conversion for amount values (to cents)
   defp convert_amount_strings(params) do
     params
     |> Enum.map(fn
@@ -271,7 +257,6 @@ defmodule ExFiskal.RequestParams do
     |> Map.new()
   end
 
-  # Helper to convert string amount to cents
   defp string_to_cents(string) when is_binary(string) do
     case Float.parse(string) do
       {float, _} -> trunc(float * 100)
@@ -314,5 +299,118 @@ defmodule ExFiskal.RequestParams do
     }
 
     Map.merge(defaults, params)
+  end
+
+  defp format_output({:ok, params}) do
+    formatted_params =
+      params
+      |> format_amount_fields()
+      |> format_tax_arrays()
+      |> format_fee_array()
+
+    {:ok, formatted_params}
+  end
+
+  defp format_output(error), do: error
+
+  defp format_amount_fields(params) do
+    Enum.reduce(@amount_fields, params, fn field, acc ->
+      case Map.get(acc, field) do
+        nil ->
+          acc
+
+        amount when is_integer(amount) ->
+          Map.put(acc, field, cents_to_string(amount))
+
+        _ ->
+          acc
+      end
+    end)
+  end
+
+  defp format_tax_arrays(params) do
+    params
+    |> format_tax_array(:vat)
+    |> format_tax_array(:consumption_tax)
+    |> format_tax_array(:other_taxes)
+  end
+
+  defp format_tax_array(params, field) do
+    case Map.get(params, field) do
+      nil ->
+        params
+
+      items when is_list(items) ->
+        formatted_items = Enum.map(items, &format_tax_item/1)
+        Map.put(params, field, formatted_items)
+
+      _ ->
+        params
+    end
+  end
+
+  defp format_tax_item(item) do
+    item
+    |> format_tax_amount(:base)
+    |> format_tax_amount(:amount)
+    |> format_tax_rate(:rate)
+  end
+
+  defp format_tax_amount(item, field) do
+    case Map.get(item, field) do
+      nil ->
+        item
+
+      amount when is_integer(amount) ->
+        Map.put(item, field, cents_to_string(amount))
+
+      _ ->
+        item
+    end
+  end
+
+  defp format_tax_rate(item, field) do
+    case Map.get(item, field) do
+      nil ->
+        item
+
+      rate when is_integer(rate) ->
+        Map.put(item, field, rate_to_string(rate))
+
+      _ ->
+        item
+    end
+  end
+
+  defp format_fee_array(params) do
+    case Map.get(params, :fees) do
+      nil ->
+        params
+
+      fees when is_list(fees) ->
+        formatted_fees =
+          Enum.map(fees, fn fee ->
+            case fee do
+              %{amount: amount} when is_integer(amount) ->
+                %{fee | amount: cents_to_string(amount)}
+
+              _ ->
+                fee
+            end
+          end)
+
+        Map.put(params, :fees, formatted_fees)
+
+      _ ->
+        params
+    end
+  end
+
+  defp cents_to_string(cents) when is_integer(cents) do
+    :erlang.float_to_binary(cents / 100.0, decimals: 2)
+  end
+
+  defp rate_to_string(rate) when is_integer(rate) do
+    :erlang.float_to_binary(rate / 100.0, decimals: 2)
   end
 end
