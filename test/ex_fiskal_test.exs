@@ -4,6 +4,9 @@ defmodule ExFiskalTest do
 
   describe "fiscalize/3" do
     test "fiscalizes a sample request" do
+      p12_binary = File.read!("priv/certificates/test.p12")
+      password = "ExamplePassword"
+
       params = %{
         tax_number: "23618229102",
         invoice_number: "1",
@@ -17,7 +20,7 @@ defmodule ExFiskalTest do
         security_code: "01234567890123456789012345678901"
       }
 
-      assert {:ok, nil} = ExFiskal.fiscalize(params, "", "")
+      assert {:ok, nil} = ExFiskal.fiscalize(params, p12_binary, password)
     end
   end
 end

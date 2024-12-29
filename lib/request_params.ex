@@ -10,8 +10,7 @@ defmodule ExFiskal.RequestParams do
     :business_unit,
     :device_number,
     :total_amount,
-    :operator_tax_number,
-    :security_code
+    :operator_tax_number
   ]
 
   @amount_fields [
@@ -29,7 +28,6 @@ defmodule ExFiskal.RequestParams do
   @tax_number_regex ~r/^\d{11}$/
   @invoice_number_regex ~r/^[1-9]\d*$/
   @business_unit_regex ~r/^[0-9a-zA-Z]+$/
-  @security_code_regex ~r/^[0-9a-f]{32}$/
 
   def new(params) when is_map(params) do
     params
@@ -87,7 +85,6 @@ defmodule ExFiskal.RequestParams do
       |> add_error(:device_number, validate_device_number(params.device_number))
       |> add_error(:total_amount, validate_amount(params.total_amount))
       |> add_error(:operator_tax_number, validate_tax_number(params.operator_tax_number))
-      |> add_error(:security_code, validate_security_code(params.security_code))
       |> add_error(:payment_method, validate_payment_method(params[:payment_method]))
       |> add_error(:sequence_mark, validate_sequence_mark(params[:sequence_mark]))
 
@@ -185,10 +182,6 @@ defmodule ExFiskal.RequestParams do
   end
 
   defp validate_rate(_), do: {:error, "must be an integer representing percentage * 100"}
-
-  defp validate_security_code(value) when is_binary(value) do
-    if Regex.match?(@security_code_regex, value), do: :ok, else: {:error, "has invalid format"}
-  end
 
   defp validate_name(value) when is_binary(value) do
     if String.length(value) <= 100, do: :ok, else: {:error, "Name too long"}

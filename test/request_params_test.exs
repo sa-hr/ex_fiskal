@@ -11,8 +11,7 @@ defmodule ExFiskal.RequestParamsTest do
     business_unit: "STORE1",
     device_number: "1",
     total_amount: 10000,
-    operator_tax_number: "98765432109",
-    security_code: "01234567890123456789012345678901"
+    operator_tax_number: "98765432109"
   }
 
   describe "new/1" do
@@ -24,7 +23,6 @@ defmodule ExFiskal.RequestParamsTest do
       assert params.device_number == "1"
       assert params.total_amount == "100.00"
       assert params.operator_tax_number == "98765432109"
-      assert params.security_code == "01234567890123456789012345678901"
     end
 
     test "applies default values" do
@@ -240,7 +238,6 @@ defmodule ExFiskal.RequestParamsTest do
         total_amount: 3000,
         payment_method: "K",
         operator_tax_number: "01234567890",
-        security_code: "e4d909c290d0fb1ca068ffaddf22cbd0",
         subsequent_delivery: false,
         paragon_number: "123/458/5",
         special_purpose: "Navedeno kao primjer"
@@ -284,7 +281,6 @@ defmodule ExFiskal.RequestParamsTest do
       assert result.total_amount == "30.00"
       assert result.payment_method == "K"
       assert result.operator_tax_number == "01234567890"
-      assert result.security_code == "e4d909c290d0fb1ca068ffaddf22cbd0"
       assert result.subsequent_delivery == false
       assert result.paragon_number == "123/458/5"
       assert result.special_purpose == "Navedeno kao primjer"
