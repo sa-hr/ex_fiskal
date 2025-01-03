@@ -3,7 +3,7 @@ defmodule ExFiskal do
   Documentation for `ExFiskal`.
   """
 
-  alias ExFiskal.{RequestParams, RequestTemplate, ZKI, XMLSignature}
+  alias ExFiskal.{RequestParams, RequestTemplate, ZKI, XMLSigner}
 
   @doc """
   Fiscalizes the recepit taking in params and the certificate and it's password.
@@ -43,8 +43,8 @@ defmodule ExFiskal do
          {:ok, zki} <- ZKI.generate(params, certificate, password),
          params <- Map.put(params, :security_code, zki),
          request <- RequestTemplate.generate(params),
-         {:ok, _content} <- XMLSignature.sign_xml(request, certificate, password) do
-      {:ok, nil}
+         {:ok, content} <- XMLSigner.sign_request(request, certificate, password) do
+      {:ok, content}
     end
   end
 end
