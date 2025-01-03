@@ -4,10 +4,6 @@ defmodule ExFiskal.PKCS12 do
   All functions accept binary data instead of file paths.
   """
 
-  @doc """
-  Signs a string using the private key from the PKCS12 binary data.
-  Returns the base64-encoded signature.
-  """
   def sign_string(string, pkcs12_binary, password) do
     with {:ok, key} <- extract_key(pkcs12_binary, password),
          {:ok, signature} <- sign_with_key(string, key) do
@@ -15,9 +11,22 @@ defmodule ExFiskal.PKCS12 do
     end
   end
 
-  @doc """
-  Parses PKCS12 binary data and returns its contents.
-  """
+  def extract_cert_info(pkcs12_binary, password) do
+    with {:ok, cert_data} <- extract_certs(pkcs12_binary, password),
+         {:ok, tmp_cert_path} <- write_temp_file(cert_data, "cert"),
+         {:ok, issuer} <- extract_issuer(tmp_cert_path),
+         {:ok, serial} <- extract_serial(tmp_cert_path) do
+      cleanup_temp_file(tmp_cert_path)
+
+      {:ok,
+       %{
+         cert: format_cert_data(cert_data),
+         issuer_name: issuer,
+         serial_number: serial
+       }}
+    end
+  end
+
   def parse_data(pkcs12_binary, password) do
     with {:ok, tmp_path} <- write_temp_pkcs12(pkcs12_binary),
          result <- do_parse(tmp_path, password) do
@@ -26,9 +35,6 @@ defmodule ExFiskal.PKCS12 do
     end
   end
 
-  @doc """
-  Extracts the private key from PKCS12 binary data.
-  """
   def extract_key(pkcs12_binary, password) do
     with {:ok, tmp_path} <- write_temp_pkcs12(pkcs12_binary),
          result <- do_extract_key(tmp_path, password) do
@@ -37,24 +43,11 @@ defmodule ExFiskal.PKCS12 do
     end
   end
 
-  @doc """
-  Extracts certificates from PKCS12 binary data.
-  """
   def extract_certs(pkcs12_binary, password) do
     with {:ok, tmp_path} <- write_temp_pkcs12(pkcs12_binary),
          result <- do_extract_certs(tmp_path, password) do
       cleanup_temp_file(tmp_path)
       result
-    end
-  end
-
-  @doc """
-  Returns the current OpenSSL version installed on the system.
-  """
-  def get_openssl_version do
-    case System.cmd("openssl", ["version"], stderr_to_stdout: true) do
-      {version, 0} -> {:ok, version}
-      {error, _code} -> {:error, error}
     end
   end
 
@@ -161,6 +154,47 @@ defmodule ExFiskal.PKCS12 do
     end
   end
 
+  defp extract_issuer(cert_path) do
+    args = ["x509", "-in", cert_path, "-noout", "-issuer"]
+
+    case System.cmd("openssl", args, stderr_to_stdout: true) do
+      {output, 0} ->
+        # Output format is "issuer= /C=HR/O=FINA/OU=DEMO"
+        # Need to convert to "OU=DEMO,O=FINA,C=HR"
+        issuer =
+          output
+          |> String.trim()
+          |> String.replace("issuer= /", "")
+          |> String.split("/")
+          |> Enum.reject(&(&1 == ""))
+          |> Enum.reverse()
+          |> Enum.join(",")
+
+        {:ok, issuer}
+
+      {error, _} ->
+        {:error, "Failed to extract issuer: #{error}"}
+    end
+  end
+
+  defp extract_serial(cert_path) do
+    args = ["x509", "-in", cert_path, "-noout", "-serial"]
+
+    case System.cmd("openssl", args, stderr_to_stdout: true) do
+      {output, 0} ->
+        # Output format is "serial=1053495513"
+        serial =
+          output
+          |> String.trim()
+          |> String.replace("serial=", "")
+
+        {:ok, serial}
+
+      {error, _} ->
+        {:error, "Failed to extract serial: #{error}"}
+    end
+  end
+
   defp sign_with_key(string, key_content) do
     with {:ok, key_file} <- write_temp_file(key_content, "key"),
          {:ok, input_file} <- write_temp_file(string, "input") do
@@ -201,5 +235,14 @@ defmodule ExFiskal.PKCS12 do
 
   defp cleanup_temp_file(path) do
     File.rm(path)
+  end
+
+  defp format_cert_data(cert_data) do
+    cert_data
+    |> String.split("\n")
+    |> Enum.reject(
+      &(String.contains?(&1, "-----BEGIN") || String.contains?(&1, "-----END") || &1 == "")
+    )
+    |> Enum.join()
   end
 end

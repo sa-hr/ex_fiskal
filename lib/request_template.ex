@@ -3,11 +3,27 @@ defmodule ExFiskal.RequestTemplate do
     params = set_defaults(params)
 
     """
-    <tns:RacunZahtjev xmlns:tns="http://www.apis-it.hr/fin/2012/types/f73" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-      <tns:Zaglavlje>
+
+    <tns:RacunZahtjev xmlns:tns="http://www.apis-it.hr/fin/2012/types/f73" 
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                      Id="#{params.message_id}">
+      #{get_header(params)}
+      #{get_invoice(params)}
+    </tns:RacunZahtjev>
+    """
+  end
+
+  defp get_header(params) do
+    """
+    <tns:Zaglavlje>
         <tns:IdPoruke>#{params.message_id}</tns:IdPoruke>
         <tns:DatumVrijeme>#{params.datetime}</tns:DatumVrijeme>
       </tns:Zaglavlje>
+    """
+  end
+
+  defp get_invoice(params) do
+    """
       <tns:Racun>
         <tns:Oib>#{params.tax_number}</tns:Oib>
         <tns:USustPdv>#{params.in_vat_system}</tns:USustPdv>
@@ -23,6 +39,7 @@ defmodule ExFiskal.RequestTemplate do
         #{maybe_generate_other_taxes(params.other_taxes)}
         #{if params.vat_free_amount, do: "<tns:IznosOslobPdv>#{params.vat_free_amount}</tns:IznosOslobPdv>"}
         #{if params.margin_amount, do: "<tns:IznosMarza>#{params.margin_amount}</tns:IznosMarza>"}
+        #{if params.non_taxable_amount, do: "<tns:IznosNePodlOpor>#{params.non_taxable_amount}</tns:IznosNePodlOpor>"}
         #{maybe_generate_fees(params.fees)}
         <tns:IznosUkupno>#{params.total_amount}</tns:IznosUkupno>
         <tns:NacinPlac>#{params.payment_method}</tns:NacinPlac>
@@ -32,7 +49,6 @@ defmodule ExFiskal.RequestTemplate do
         #{if params.paragon_number, do: "<tns:ParagonBrRac>#{params.paragon_number}</tns:ParagonBrRac>"}
         #{if params.special_purpose, do: "<tns:SpecNamj>#{params.special_purpose}</tns:SpecNamj>"}
       </tns:Racun>
-    </tns:RacunZahtjev>
     """
   end
 
@@ -45,6 +61,7 @@ defmodule ExFiskal.RequestTemplate do
         fees: [],
         vat_free_amount: nil,
         margin_amount: nil,
+        non_taxable_amount: nil,
         paragon_number: nil,
         special_purpose: nil
       },
