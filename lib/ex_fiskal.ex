@@ -3,7 +3,7 @@ defmodule ExFiskal do
   Documentation for `ExFiskal`.
   """
 
-  alias ExFiskal.{RequestParams, RequestTemplate, ZKI}
+  alias ExFiskal.{RequestParams, RequestTemplate, ZKI, RequestXML}
 
   @doc """
   Fiscalizes the recepit taking in params and the certificate and it's password.
@@ -34,16 +34,19 @@ defmodule ExFiskal do
     operator_tax_number: "37501579645",
   }
 
-  ExFiskal.fiscalize(params, "", "")
-  ```
+  certificate = File.read!("/tmp/cert.p12")
+  password = "ExamplePassword"
 
+  ExFiskal.fiscalize(params, certificate, password)
+  ```
   """
   def fiscalize(params, certificate, password) do
     with {:ok, params} <- RequestParams.new(params),
          {:ok, zki} <- ZKI.generate(params, certificate, password),
          params <- Map.put(params, :security_code, zki),
-         _request <- RequestTemplate.generate(params) do
-      {:ok, nil}
+         request <- RequestTemplate.generate_request(params),
+         {:ok, request} <- RequestXML.process_request(request, certificate, password) do
+      {:ok, request}
     end
   end
 end

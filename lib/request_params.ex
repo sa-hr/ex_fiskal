@@ -171,9 +171,7 @@ defmodule ExFiskal.RequestParams do
     if Regex.match?(@invoice_number_regex, value), do: :ok, else: {:error, "has invalid format"}
   end
 
-  defp validate_amount(value) when is_integer(value) do
-    if value >= 0, do: :ok, else: {:error, "must be non-negative"}
-  end
+  defp validate_amount(value) when is_integer(value), do: :ok
 
   defp validate_amount(_), do: {:error, "must be an integer representing cents"}
 

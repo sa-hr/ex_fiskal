@@ -6,20 +6,6 @@ defmodule ExFiskal.ZKI do
 
   alias ExFiskal.PKCS12
 
-  @doc """
-  Generates ZKI code from the receipt data and PKCS12 certificate.
-
-  Parameters:
-  - params: Map containing required fields:
-    - tax_number: Tax number (OIB)
-    - datetime: Receipt datetime
-    - invoice_number: Receipt sequence number
-    - business_unit: Business unit identifier
-    - device_number: Device identifier
-    - total_amount: Total amount
-  - p12_binary: PKCS12 certificate binary data
-  - password: PKCS12 certificate password
-  """
   def generate(params, p12_binary, password) do
     with {:ok, input_string} <- build_input_string(params),
          {:ok, signature} <- sign_string(input_string, p12_binary, password) do
