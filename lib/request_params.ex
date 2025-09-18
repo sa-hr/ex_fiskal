@@ -275,7 +275,7 @@ defmodule ExFiskal.RequestParams do
       datetime: now,
       invoice_datetime: now,
       in_vat_system: true,
-      sequence_mark: SequenceMark.business_unit(),
+      sequence_mark: SequenceMark.device(),
       payment_method: PaymentMethod.cards(),
       subsequent_delivery: false,
       vat: [],
