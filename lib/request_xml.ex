@@ -24,7 +24,7 @@ defmodule ExFiskal.RequestXML do
           :Signature,
           %{"xmlns" => "http://www.w3.org/2000/09/xmldsig#"},
           [
-            signed_element,
+            "%%%REPLACETOKEN%%%",
             element(:SignatureValue, signature),
             element(:KeyInfo, [
               element(:X509Data, [
@@ -38,6 +38,8 @@ defmodule ExFiskal.RequestXML do
           ]
         )
         |> generate()
+
+      signature_xml = String.replace(signature_xml, "%%%REPLACETOKEN%%%", signed_element)
 
       {:ok, signature_xml}
     end
@@ -112,17 +114,20 @@ defmodule ExFiskal.RequestXML do
     doc = String.replace(doc, "</tns:RacunZahtjev>", "")
     doc = doc <> "#{signature}</tns:RacunZahtjev>"
 
-    document([
-      element(
-        :"soapenv:Envelope",
-        %{
-          "xmlns:soapenv" => "http://schemas.xmlsoap.org/soap/envelope/"
-        },
-        [
-          element(:"soapenv:Body", nil, [doc])
-        ]
-      )
-    ])
-    |> generate()
+    envelope =
+      document([
+        element(
+          :"soapenv:Envelope",
+          %{
+            "xmlns:soapenv" => "http://schemas.xmlsoap.org/soap/envelope/"
+          },
+          [
+            element(:"soapenv:Body", nil, ["%%%REPLACETOKEN%%%"])
+          ]
+        )
+      ])
+      |> generate()
+
+    String.replace(envelope, "%%%REPLACETOKEN%%%", doc)
   end
 end
