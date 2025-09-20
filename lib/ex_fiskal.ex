@@ -46,7 +46,7 @@ defmodule ExFiskal do
          params <- Map.put(params, :security_code, zki),
          request <- RequestTemplate.generate_request(params),
          {:ok, request} <- RequestXML.process_request(request, certificate, password) do
-      {:ok, request}
+      {:ok, zki, request}
     end
   end
 end
