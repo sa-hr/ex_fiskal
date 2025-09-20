@@ -69,7 +69,8 @@ defmodule ExFiskal.PKCS12 do
       "-nodes",
       "-passin",
       "pass:#{password}",
-      "-legacy"
+      "-legacy",
+      "-provider legacy -provider default"
     ]
 
     # Try first with legacy support
@@ -147,7 +148,8 @@ defmodule ExFiskal.PKCS12 do
       "-nokeys",
       "-passin",
       "pass:#{password}",
-      "-legacy"
+      "-legacy",
+      "-provider legacy -provider default"
     ]
 
     case System.cmd("openssl", legacy_args, stderr_to_stdout: true) do
