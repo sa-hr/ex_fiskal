@@ -1,7 +1,7 @@
 defmodule ExFiskal.RequestXML do
   import XmlBuilder
 
-  alias ExFiskal.{Cryptorgaphy, CertificateData}
+  alias ExFiskal.{Cryptography, CertificateData}
 
   def process_request!(doc, %CertificateData{} = certificate_data) do
     request = wrap_in_request_envelope(doc)
@@ -14,7 +14,7 @@ defmodule ExFiskal.RequestXML do
   end
 
   defp build_signature!(signed_element, certificate_data) do
-    signature = Cryptorgaphy.sign_string!(signed_element, certificate_data.key)
+    signature = Cryptography.sign_string!(signed_element, certificate_data.key)
 
     signature_xml =
       element(

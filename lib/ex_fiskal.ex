@@ -3,7 +3,7 @@ defmodule ExFiskal do
   Documentation for `ExFiskal`.
   """
 
-  alias ExFiskal.{RequestParams, RequestTemplate, ZKI, RequestXML, Cryptorgaphy, CertificateData}
+  alias ExFiskal.{RequestParams, RequestTemplate, ZKI, RequestXML, Cryptography, CertificateData}
 
   @doc """
   Fiscalizes the recepit taking in params and the extracted private key and public certificate.
@@ -61,6 +61,6 @@ defmodule ExFiskal do
   end
 
   def extract_certificate_data!(certificate, password) do
-    Cryptorgaphy.extract_certificate_data!(certificate, password)
+    Cryptography.extract_certificate_data!(certificate, password)
   end
 end

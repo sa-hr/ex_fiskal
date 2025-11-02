@@ -4,7 +4,7 @@ defmodule ExFiskal.MixProject do
   def project do
     [
       app: :ex_fiskal,
-      version: "0.2.0",
+      version: "0.2.1",
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       description: description(),
@@ -17,6 +17,7 @@ defmodule ExFiskal.MixProject do
 
   def application do
     [
+      mod: {ExFiskal.Application, []},
       extra_applications: [:xmerl, :logger]
     ]
   end

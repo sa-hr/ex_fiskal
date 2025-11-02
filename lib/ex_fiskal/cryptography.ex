@@ -1,4 +1,4 @@
-defmodule ExFiskal.Cryptorgaphy do
+defmodule ExFiskal.Cryptography do
   alias ExFiskal.CertificateData
 
   def extract_certificate_data!(certificate, password) do

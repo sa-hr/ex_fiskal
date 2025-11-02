@@ -16,7 +16,7 @@ defmodule ExFiskal.ZKITest do
     }
 
     certificate_data =
-      ExFiskal.Cryptorgaphy.extract_certificate_data!(pkcs12_binary, "ExamplePassword")
+      ExFiskal.Cryptography.extract_certificate_data!(pkcs12_binary, "ExamplePassword")
 
     {:ok, certificate_data: certificate_data, valid_params: valid_params}
   end

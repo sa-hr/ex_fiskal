@@ -4,11 +4,11 @@ defmodule ExFiskal.ZKI do
   The ZKI is a security code that confirms the link between the fiscalization obligor and the issued receipt.
   """
 
-  alias ExFiskal.{CertificateData, Cryptorgaphy}
+  alias ExFiskal.{CertificateData, Cryptography}
 
   def generate!(params, %CertificateData{key: private_key}) do
     input_string = build_input_string(params)
-    signature = Cryptorgaphy.sign_string!(input_string, private_key)
+    signature = Cryptography.sign_string!(input_string, private_key)
 
     signature
     |> Base.decode64!()
