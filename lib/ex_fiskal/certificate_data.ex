@@ -1,4 +1,5 @@
 defmodule ExFiskal.CertificateData do
+  @derive Jason.Encoder
   defstruct [
     :key,
     :certificate,
