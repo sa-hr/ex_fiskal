@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+  <soapenv:Body>
+    <tns:RacunZahtjev xmlns:tns="http://www.apis-it.hr/fin/2012/types/f73" Id="RacunZahtjev">
+  <tns:Zaglavlje>
+    <tns:IdPoruke>0f57be5c-bd63-4f17-a982-dbe5d43369ad</tns:IdPoruke>
+    <tns:DatumVrijeme>01.01.2024T12:00:00</tns:DatumVrijeme>
+  </tns:Zaglavlje>
+  <tns:Racun>
+    <tns:Oib>23618229102</tns:Oib>
+    <tns:USustPdv>true</tns:USustPdv>
+    <tns:DatVrijeme>01.01.2024T12:00:00</tns:DatVrijeme>
+    <tns:OznSlijed>N</tns:OznSlijed>
+    <tns:BrRac>
+      <tns:BrOznRac>1</tns:BrOznRac>
+      <tns:OznPosPr>1</tns:OznPosPr>
+      <tns:OznNapUr>1</tns:OznNapUr>
+    </tns:BrRac>
+    <tns:Pdv>
+      <tns:Porez>
+        <tns:Stopa>25.00</tns:Stopa>
+        <tns:Osnovica>100.00</tns:Osnovica>
+        <tns:Iznos>20.00</tns:Iznos>
+      </tns:Porez>
+    </tns:Pdv>
+    <tns:IznosUkupno>100.00</tns:IznosUkupno>
+    <tns:NacinPlac>K</tns:NacinPlac>
+    <tns:OibOper>37501579645</tns:OibOper>
+    <tns:ZastKod>e3008f5f76e006d638803877f70dfbe4</tns:ZastKod>
+    <tns:NakDost>false</tns:NakDost>
+  </tns:Racun>
+<Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+  <SignedInfo xmlns="http://www.w3.org/2000/09/xmldsig#">
+  <CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></CanonicalizationMethod>
+  <SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"></SignatureMethod>
+  <Reference URI="#RacunZahtjev">
+    <Transforms>
+      <Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></Transform>
+      <Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></Transform>
+    </Transforms>
+    <DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></DigestMethod>
+    <DigestValue>YI9ff3uXLkVgdwnMyr4LUCIkweY=</DigestValue>
+  </Reference>
+</SignedInfo>
+  <SignatureValue>yq0Q9Ac74DvcqzdMUdmpKV4IR0jcmi4BU8B41lJUVWZeoN/487JSw1G5mdK2EGOS39JuGTBNiNRWT9EgMtXDNneMgGrsf6FQebcJJvf13pp1wXHey4bQvLRKY6IzienAKtJqnOsPa7WUOnR21OBUynq6ZzW8AmUuEpUFpUHUzxCDFamj2sWbWPLOQLeGOERx0cwYYbqT4xNLQnnBcj4wG3rjZDyMgqRmEsTAgWXYe60xjglrJKO9dOb8vBbSDYUYNOUMUht5Jp4G0EpWDs4VM8Axl2KU62rEr9Hy4nJN2KQ5lA6EzISHD1srPWFtXUxGJ0iVHWQOsw9lucrFlsm8Kw==</SignatureValue>
+  <KeyInfo>
+    <X509Data>
+      <X509Certificate>MIIDRTCCAi2gAwIBAgIUNYN520wgWwKhxANL9RKzHrn/dfkwDQYJKoZIhvcNAQELBQAwMjENMAsGA1UEAwwEVGVzdDEUMBIGA1UECgwLWW91ckNvbXBhbnkxCzAJBgNVBAYTAlVTMB4XDTI0MTIyOTEyMTUxNloXDTI1MTIyOTEyMTUxNlowMjENMAsGA1UEAwwEVGVzdDEUMBIGA1UECgwLWW91ckNvbXBhbnkxCzAJBgNVBAYTAlVTMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz8Eg+HFQ6HiCpGEd/1K6YvJ2axZLwh8m+Ok8CplsD+tpjvT90BwvEXfP6WvHFtW42cIYQ7i76CGkZaSY0HBQWgZeJeNHjtfLVk81INh2LdEGvZip/zkVW9n4T6OJUTmGnFxYZ99jxW0/s41CoU4xpUaggUK9AQgZw1il9BlSP3ibqdA6VBxFH8aQIoaLSA06EDvZWWcr4mR9p8e0ZJai3a+n9q8waFGI4ZSqgjuLy+kc/TF3NavqS51Q2n2028iPN+6nh5j5Yi6o5O7J7HO9P35/9mHINViml8pSgj/ZoxUQaTf/+b1Uo0FDBLYgFZwR9XhcwOQMyUw/tOAZkknnQQIDAQABo1MwUTAdBgNVHQ4EFgQUESypFouaxAv/NE2qRFdzeVe4YJ0wHwYDVR0jBBgwFoAUESypFouaxAv/NE2qRFdzeVe4YJ0wDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAoutK7DUh07sphKs47kVT5c4STYtrEdVZJ3NPk+UpkXSwrTft7tzgArlE5Y+1acoNNz1p852eWuqUQIBxIIpfaLYE8GSj+F5uaVj9jPBGwXpxArZm3RyQZupEL4TC8S0h/dy++3cVCpj7TdpEgwWJij2vUUdecZ2aAkCXGs36cWA5b0+82qVjputJs9h/9H6EgQhbjb+MB1VTG8UQjin4yry20Eti7LPQImTvCfKcMM7BtncU0O474z2cNOYdYYezrEgb43tODFjy9S/ekpLm7ND8C4Yge1MqJrEdBkux1Zk9L036Mh7amvMMfr0zx982/5nVfZ9w4TD0dYapi0Uy7A==</X509Certificate>
+      <X509IssuerSerial>
+        <X509IssuerName>commonName=Test,organizationName=YourCompany,countryName=US</X509IssuerName>
+        <X509SerialNumber>305508523684296432178186574353373956684086474233</X509SerialNumber>
+      </X509IssuerSerial>
+    </X509Data>
+  </KeyInfo>
+</Signature></tns:RacunZahtjev>
+  </soapenv:Body>
+</soapenv:Envelope>

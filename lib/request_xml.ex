@@ -1,63 +1,53 @@
 defmodule ExFiskal.RequestXML do
   import XmlBuilder
 
-  alias ExFiskal.PKCS12
+  alias ExFiskal.{Cryptorgaphy, CertificateData}
 
-  def process_request(doc, pkcs12_binary, password) do
+  def process_request!(doc, %CertificateData{} = certificate_data) do
     request = wrap_in_request_envelope(doc)
+    xml_string = canonicalize!(request)
+    digest = calculate_digest(xml_string)
+    signature_xml = prepare_for_signing(digest)
+    signature = build_signature!(signature_xml, certificate_data)
 
-    with {:ok, xml_string} <- canonicalize(request),
-         {:ok, digest} <- calculate_digest(xml_string),
-         {:ok, signature_xml} <- prepare_for_signing(digest),
-         {:ok, signature} <- build_signature(signature_xml, pkcs12_binary, password) do
-      request = wrap_in_soap_envelope(xml_string, signature)
-
-      {:ok, request}
-    end
+    wrap_in_soap_envelope(xml_string, signature)
   end
 
-  defp build_signature(signed_element, pkcs12_binary, password) do
-    with {:ok, signature} <- PKCS12.sign_string(signed_element, pkcs12_binary, password),
-         {:ok, cert_info} <- PKCS12.extract_cert_info(pkcs12_binary, password) do
-      signature_xml =
-        element(
-          :Signature,
-          %{"xmlns" => "http://www.w3.org/2000/09/xmldsig#"},
-          [
-            "%%%REPLACETOKEN%%%",
-            element(:SignatureValue, signature),
-            element(:KeyInfo, [
-              element(:X509Data, [
-                element(:X509Certificate, cert_info.cert),
-                element(:X509IssuerSerial, [
-                  element(:X509IssuerName, cert_info.issuer_name),
-                  element(:X509SerialNumber, cert_info.issuer_serial_number)
-                ])
+  defp build_signature!(signed_element, certificate_data) do
+    signature = Cryptorgaphy.sign_string!(signed_element, certificate_data.key)
+
+    signature_xml =
+      element(
+        :Signature,
+        %{"xmlns" => "http://www.w3.org/2000/09/xmldsig#"},
+        [
+          "%%%REPLACETOKEN%%%",
+          element(:SignatureValue, signature),
+          element(:KeyInfo, [
+            element(:X509Data, [
+              element(:X509Certificate, certificate_data.encoded_certificate),
+              element(:X509IssuerSerial, [
+                element(:X509IssuerName, certificate_data.issuer_name),
+                element(:X509SerialNumber, certificate_data.issuer_serial_number)
               ])
             ])
-          ]
-        )
-        |> generate()
+          ])
+        ]
+      )
+      |> generate()
 
-      signature_xml = String.replace(signature_xml, "%%%REPLACETOKEN%%%", signed_element)
-
-      {:ok, signature_xml}
-    end
+    String.replace(signature_xml, "%%%REPLACETOKEN%%%", signed_element)
   end
 
-  defp canonicalize(doc) do
+  defp canonicalize!(doc) do
     xml = doc |> generate() |> to_charlist()
-
-    with {xml_tuples, _} <- :xmerl_scan.string(xml, namespace_conformant: true, document: true) do
-      XmerlC14n.canonicalize(xml_tuples)
-    end
+    {xml_tuples, _} = :xmerl_scan.string(xml, namespace_conformant: true, document: true)
+    {:ok, result} = XmerlC14n.canonicalize(xml_tuples)
+    result
   end
 
   defp calculate_digest(xml_string) do
-    result = :crypto.hash(:sha, xml_string) |> Base.encode64()
-    {:ok, result}
-  rescue
-    _error -> {:error, "Digest calcualtion failed"}
+    :crypto.hash(:sha, xml_string) |> Base.encode64()
   end
 
   defp prepare_for_signing(digest) do
@@ -96,7 +86,7 @@ defmodule ExFiskal.RequestXML do
         )
       ]
     )
-    |> canonicalize()
+    |> canonicalize!()
   end
 
   defp wrap_in_request_envelope(elements) do

@@ -3,10 +3,10 @@ defmodule ExFiskal do
   Documentation for `ExFiskal`.
   """
 
-  alias ExFiskal.{RequestParams, RequestTemplate, ZKI, RequestXML}
+  alias ExFiskal.{RequestParams, RequestTemplate, ZKI, RequestXML, Cryptorgaphy, CertificateData}
 
   @doc """
-  Fiscalizes the recepit taking in params and the certificate and it's password.
+  Fiscalizes the recepit taking in params and the extracted private key and public certificate.
 
   ## Example
 
@@ -37,16 +37,30 @@ defmodule ExFiskal do
   certificate = File.read!("/tmp/cert.p12")
   password = "ExamplePassword"
 
-  ExFiskal.fiscalize(params, certificate, password)
+  # First extract the certificate keys
+  certificate_data = ExFiskal.extract_certificate_data!(certificate, password)
+
+  # Then fiscalize with the extracted keys
+  ExFiskal.fiscalize(params, certificate_data)
   ```
   """
-  def fiscalize(params, certificate, password) do
-    with {:ok, params} <- RequestParams.new(params),
-         {:ok, zki} <- ZKI.generate(params, certificate, password),
-         params <- Map.put(params, :security_code, zki),
-         request <- RequestTemplate.generate_request(params),
-         {:ok, request} <- RequestXML.process_request(request, certificate, password) do
+  def fiscalize!(params, certificate_data) do
+    certificate_data = CertificateData.new(certificate_data)
+
+    with {:ok, params} <- RequestParams.new(params) do
+      zki = ZKI.generate!(params, certificate_data)
+
+      request =
+        params
+        |> Map.put(:security_code, zki)
+        |> RequestTemplate.generate_request()
+        |> RequestXML.process_request!(certificate_data)
+
       {:ok, zki, request}
     end
+  end
+
+  def extract_certificate_data!(certificate, password) do
+    Cryptorgaphy.extract_certificate_data!(certificate, password)
   end
 end

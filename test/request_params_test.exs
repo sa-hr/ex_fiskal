@@ -30,7 +30,7 @@ defmodule ExFiskal.RequestParamsTest do
       assert is_binary(params.message_id)
       assert String.length(params.message_id) == 36
       assert params.in_vat_system == true
-      assert params.sequence_mark == SequenceMark.business_unit()
+      assert params.sequence_mark == SequenceMark.device()
       assert params.payment_method == PaymentMethod.cards()
       assert params.subsequent_delivery == false
       assert params.vat == []

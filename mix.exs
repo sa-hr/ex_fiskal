@@ -26,7 +26,8 @@ defmodule ExFiskal.MixProject do
       {:uuid, "~> 1.1"},
       {:xmerl_c14n, "~> 0.1.0"},
       {:xml_builder, "~> 2.1"},
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:pythonx, "~> 0.4.0"}
     ]
   end
 

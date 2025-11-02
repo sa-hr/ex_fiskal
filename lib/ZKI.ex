@@ -4,13 +4,16 @@ defmodule ExFiskal.ZKI do
   The ZKI is a security code that confirms the link between the fiscalization obligor and the issued receipt.
   """
 
-  alias ExFiskal.PKCS12
+  alias ExFiskal.{CertificateData, Cryptorgaphy}
 
-  def generate(params, p12_binary, password) do
-    with {:ok, input_string} <- build_input_string(params),
-         {:ok, signature} <- sign_string(input_string, p12_binary, password) do
-      {:ok, generate_zki(signature)}
-    end
+  def generate!(params, %CertificateData{key: private_key}) do
+    input_string = build_input_string(params)
+    signature = Cryptorgaphy.sign_string!(input_string, private_key)
+
+    signature
+    |> Base.decode64!()
+    |> :erlang.md5()
+    |> Base.encode16(case: :lower)
   end
 
   defp build_input_string(%{
@@ -23,28 +26,14 @@ defmodule ExFiskal.ZKI do
        }) do
     datetime = String.replace(datetime, "T", " ")
 
-    input =
-      [
-        tax_number,
-        datetime,
-        invoice_number,
-        business_unit,
-        device_number,
-        total_amount
-      ]
-      |> Enum.join("")
-
-    {:ok, input}
-  end
-
-  defp sign_string(string, p12_binary, password) do
-    PKCS12.sign_string(string, p12_binary, password)
-  end
-
-  defp generate_zki(signature) do
-    signature
-    |> Base.decode64!()
-    |> :erlang.md5()
-    |> Base.encode16(case: :lower)
+    [
+      tax_number,
+      datetime,
+      invoice_number,
+      business_unit,
+      device_number,
+      total_amount
+    ]
+    |> Enum.join("")
   end
 end
